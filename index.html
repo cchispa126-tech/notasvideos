@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Bloc de Notas Cloud - Con miniaturas de YouTube</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .config-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .config-panel h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .config-group {
+            margin-bottom: 15px;
+        }
+
+        .config-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .config-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .config-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .btn-sync {
+            background: #28a745;
+            margin-right: 10px;
+        }
+
+        .btn-sync:hover {
+            background: #218838;
+        }
+
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .nota-form {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 16px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+            background: #764ba2;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .notas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .nota-card {
+            background: white;
+            padding: 18px;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .nota-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        .nota-titulo {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #333;
+            word-wrap: break-word;
+            border-left: 4px solid #667eea;
+            padding-left: 12px;
+        }
+
+        .nota-contenido {
+            color: #555;
+            margin-bottom: 12px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        /* Estilos para tarjetas de YouTube */
+        .youtube-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 12px 0;
+            transition: transform 0.2s;
+            border: 1px solid #e9ecef;
+        }
+
+        .youtube-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .youtube-card a {
+            text-decoration: none;
+            display: block;
+        }
+
+        .youtube-thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            display: block;
+        }
+
+        .youtube-info {
+            padding: 12px;
+            background: white;
+        }
+
+        .youtube-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .youtube-url {
+            font-size: 11px;
+            color: #667eea;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .youtube-badge {
+            display: inline-block;
+            background: #ff0000;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        /* Enlaces normales */
+        .nota-contenido a:not(.youtube-card a) {
+            color: #667eea;
+            text-decoration: none;
+            border-bottom: 1px solid #667eea;
+            word-break: break-all;
+        }
+
+        .nota-contenido a:not(.youtube-card a):hover {
+            color: #764ba2;
+            border-bottom-color: #764ba2;
+        }
+
+        .nota-fecha {
+            font-size: 0.75em;
+            color: #999;
+            margin-bottom: 12px;
+            margin-top: 8px;
+        }
+
+        .btn-eliminar {
+            background: #dc3545;
+            padding: 8px 16px;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .btn-eliminar:hover {
+            background: #c82333;
+        }
+
+        .sync-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 16px;
+            border-radius: 30px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+
+        .sync-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+        .sync-dot.syncing {
+            background: #ffc107;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+
+        .empty-state {
+            text-align: center;
+            color: white;
+            padding: 50px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            opacity: 0.7;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .notas-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            button {
+                padding: 10px 18px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Bloc de Notas Cloud</h1>
+            <p>Sincronizado con GitHub - Enlaces de YouTube se convierten en miniaturas</p>
+        </div>
+
+        <div class="config-panel">
+            <h3>⚙️ Configuración de GitHub</h3>
+            <div class="config-group">
+                <label>🔑 GitHub Token:</label>
+                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+                <small>Necesitas un token con permiso "gist"</small>
+            </div>
+            <div class="config-group">
+                <label>📁 ID del Gist (carpeta de notas):</label>
+                <input type="text" id="gistId" placeholder="Déjalo vacío para crear uno nuevo">
+                <small>Es como el nombre de tu carpeta en la nube</small>
+            </div>
+            <div class="btn-group">
+                <button class="btn-sync" onclick="guardarConfiguracion()">💾 Guardar Configuración</button>
+                <button onclick="sincronizarDesdeGitHub()">📥 Sincronizar desde GitHub</button>
+                <button onclick="subirAGitHub()">📤 Subir a GitHub</button>
+            </div>
+            <div id="statusMessage" class="status info">
+                ℹ️ Configura tu token de GitHub para sincronizar notas entre dispositivos
+            </div>
+        </div>
+
+        <div class="nota-form">
+            <input type="text" id="titulo" placeholder="📌 Título de la nota">
+            <textarea id="contenido" placeholder="✍️ Escribe tu nota aquí... Puedes pegar enlaces de YouTube y se mostrarán con miniatura"></textarea>
+            <button onclick="guardarNota()">💾 Guardar Nota</button>
+        </div>
+
+        <div id="notas-container" class="notas-grid"></div>
+        <footer>
+            💡 Los enlaces de YouTube se convierten automáticamente en miniaturas. ¡Toca la imagen para reproducir!
+        </footer>
+    </div>
+
+    <div class="sync-indicator">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncStatus">Local</span>
+    </div>
+
+    <script>
+        let notas = [];
+        let config = {
+            token: '',
+            gistId: ''
+        };
+
+        // Función para extraer ID de YouTube de cualquier URL
+        function extractYouTubeID(url) {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=)([^&]+)/,
+                /(?:youtu\.be\/)([^?]+)/,
+                /(?:youtube\.com\/embed\/)([^?]+)/,
+                /(?:youtube\.com\/v\/)([^?]+)/
+            ];
+            
+            for (let pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) return match[1];
+            }
+            return null;
+        }
+
+        // Función para convertir enlaces de YouTube en miniaturas
+        function convertirYouTubeAMiniatura(texto) {
+            // Buscar URLs de YouTube
+            const urlRegex = /(https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s]+)/g;
+            
+            return texto.replace(urlRegex, function(url) {
+                const videoId = extractYouTubeID(url);
+                if (videoId) {
+                    return `
+                        <div class="youtube-card">
+                            <a href="${url}" target="_blank" rel="noopener noreferrer">
+                                <img class="youtube-thumbnail" 
+                                     src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" 
+                                     alt="Miniatura del video"
+                                     onerror="this.src='https://img.youtube.com/vi/${videoId}/0.jpg'">
+                                <div class="youtube-info">
+                                    <span class="youtube-badge">▶ YouTube</span>
+                                    <div class="youtube-title">Haz clic para reproducir</div>
+                                    <div class="youtube-url">${url}</div>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                }
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+            });
+        }
+
+        // Cargar configuración guardada
+        function cargarConfiguracion() {
+            const savedToken = localStorage.getItem('github_token');
+            const savedGistId = localStorage.getItem('github_gist_id');
+            
+            if (savedToken) {
+                document.getElementById('githubToken').value = savedToken;
+                config.token = savedToken;
+            }
+            if (savedGistId) {
+                document.getElementById('gistId').value = savedGistId;
+                config.gistId = savedGistId;
+            }
+            
+            cargarNotasLocales();
+            
+            if (config.token && config.gistId) {
+                sincronizarDesdeGitHub();
+            }
+        }
+
+        // Guardar configuración
+        function guardarConfiguracion() {
+            config.token = document.getElementById('githubToken').value;
+            config.gistId = document.getElementById('gistId').value;
+            
+            if (config.token) {
+                localStorage.setItem('github_token', config.token);
+            }
+            if (config.gistId) {
+                localStorage.setItem('github_gist_id', config.gistId);
+            }
+            
+            mostrarStatus('✅ Configuración guardada', 'success');
+        }
+
+        // Cargar notas del localStorage
+        function cargarNotasLocales() {
+            const notasGuardadas = localStorage.getItem('blocNotas');
+            if (notasGuardadas) {
+                notas = JSON.parse(notasGuardadas);
+                mostrarNotas();
+            }
+        }
+
+        // Guardar nota localmente
+        function guardarNota() {
+            const titulo = document.getElementById('titulo').value;
+            const contenido = document.getElementById('contenido').value;
+
+            if (!titulo && !contenido) {
+                alert('📝 Por favor, escribe algo en tu nota');
+                return;
+            }
+
+            const nota = {
+                id: Date.now(),
+                titulo: titulo || 'Sin título',
+                contenido: contenido,
+                fecha: new Date().toLocaleString(),
+                timestamp: Date.now()
+            };
+
+            notas.unshift(nota);
+            guardarNotasLocales();
+            
+            document.getElementById('titulo').value = '';
+            document.getElementById('contenido').value = '';
+            
+            mostrarNotas();
+            actualizarSyncStatus('local');
+            mostrarStatus('✅ Nota guardada localmente. Usa "Subir a GitHub" para sincronizar', 'success');
+        }
+
+        // Guardar notas en localStorage
+        function guardarNotasLocales() {
+            localStorage.setItem('blocNotas', JSON.stringify(notas));
+        }
+
+        // Eliminar nota
+        function eliminarNota(id) {
+            if (confirm('¿Eliminar esta nota?')) {
+                notas = notas.filter(nota => nota.id !== id);
+                guardarNotasLocales();
+                mostrarNotas();
+                actualizarSyncStatus('local');
+                mostrarStatus('🗑️ Nota eliminada', 'info');
+            }
+        }
+
+        // Subir notas a GitHub Gist
+        async function subirAGitHub() {
+            if (!config.token) {
+                mostrarStatus('❌ Primero configura tu token de GitHub', 'error');
+                return;
+            }
+
+            if (notas.length === 0) {
+                mostrarStatus('⚠️ No hay notas para subir', 'info');
+                return;
+            }
+
+            actualizarSyncStatus('syncing');
+            
+            const data = {
+                description: 'Mis notas sincronizadas - Bloc de Notas Cloud',
+                public: false,
+                files: {
+                    'notas.json': {
+                        content: JSON.stringify(notas, null, 2)
+                    }
+                }
+            };
+
+            try {
+                let url = 'https://api.github.com/gists';
+                let method = 'POST';
+                
+                if (config.gistId) {
+                    url = `https://api.github.com/gists/${config.gistId}`;
+                    method = 'PATCH';
+                }
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    if (!config.gistId && result.id) {
+                        config.gistId = result.id;
+                        localStorage.setItem('github_gist_id', result.id);
+                        document.getElementById('gistId').value = result.id;
+                        mostrarStatus(`✅ ¡Notas en la nube! Tu Gist ID es: ${result.id}`, 'success');
+                    } else {
+                        mostrarStatus('✅ Notas subidas a GitHub correctamente', 'success');
+                    }
+                    actualizarSyncStatus('synced');
+                } else {
+                    throw new Error(result.message || 'Error al subir');
+                }
+            } catch (error) {
+                mostrarStatus(`❌ Error: ${error.message}`, 'error');
+                actualizarSyncStatus('error');
+            }
+        }
+
+        // Sincronizar desde GitHub
+        async function sincronizarDesdeGitHub() {
+            if (!config.token || !config.gistId) {
+                mostrarStatus('ℹ️ Configura token y Gist ID para sincronizar', 'info');
+                return;
+            }
+
+            actualizarSyncStatus('syncing');
+            
+            try {
+                const response = await fetch(`https://api.github.com/gists/${config.gistId}`, {
+                    headers: {
+                        'Authorization': `token ${config.token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const gist = await response.json();
+                    const notasContent = gist.files['notas.json']?.content;
+                    
+                    if (notasContent) {
+                        const notasNube = JSON.parse(notasContent);
+                        
+                        const notasExistentesIds = new Set(notas.map(n => n.id));
+                        const nuevasNotas = notasNube.filter(n => !notasExistentesIds.has(n.id));
+                        
+                        if (nuevasNotas.length > 0) {
+                            notas = [...nuevasNotas, ...notas];
+                            guardarNotasLocales();
+                            mostrarNotas();
+                            mostrarStatus(`✅ Sincronizadas ${nuevasNotas.length} notas nuevas`, 'success');
+                        } else {
+                            mostrarStatus('✅ Ya estás sincronizado', 'success');
+                        }
+                        actualizarSyncStatus('synced');
+                    } else {
+                        mostrarStatus('ℹ️ No hay notas en la nube todavía', 'info');
+                    }
+                } else {
+                    throw new Error('No se pudo obtener el Gist');
+                }
+            } catch (error) {
+                mostrarStatus(`❌ Error al sincronizar: ${error.message}`, 'error');
+                actualizarSyncStatus('error');
+            }
+        }
+
+        // Mostrar notas en pantalla
+        function mostrarNotas() {
+            const container = document.getElementById('notas-container');
+            
+            if (notas.length === 0) {
+                container.innerHTML = '<div class="empty-state">✨ No hay notas aún. ¡Crea tu primera nota!</div>';
+                return;
+            }
+
+            container.innerHTML = notas.map(nota => `
+                <div class="nota-card">
+                    <div class="nota-titulo">${escapeHtml(nota.titulo)}</div>
+                    <div class="nota-contenido">${convertirYouTubeAMiniatura(escapeHtml(nota.contenido))}</div>
+                    <div class="nota-fecha">📅 ${nota.fecha}</div>
+                    <button class="btn-eliminar" onclick="eliminarNota(${nota.id})">🗑️ Eliminar</button>
+                </div>
+            `).join('');
+        }
+
+        // Mostrar mensaje de estado
+        function mostrarStatus(mensaje, tipo) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = mensaje;
+            statusDiv.className = `status ${tipo}`;
+            
+            setTimeout(() => {
+                if (statusDiv.className.includes(tipo)) {
+                    statusDiv.className = 'status info';
+                    statusDiv.textContent = '✅ Listo';
+                }
+            }, 4000);
+        }
+
+        // Actualizar indicador de sincronización
+        function actualizarSyncStatus(estado) {
+            const dot = document.getElementById('syncDot');
+            const status = document.getElementById('syncStatus');
+            
+            switch(estado) {
+                case 'syncing':
+                    dot.className = 'sync-dot syncing';
+                    status.textContent = 'Sincronizando...';
+                    break;
+                case 'synced':
+                    dot.className = 'sync-dot';
+                    dot.style.background = '#28a745';
+                    status.textContent = 'Sincronizado ☁️';
+                    break;
+                case 'local':
+                    dot.className = 'sync-dot';
+                    dot.style.background = '#ffc107';
+                    status.textContent = 'Solo local 💾';
+                    break;
+                case 'error':
+                    dot.className = 'sync-dot';
+                    dot.style.background = '#dc3545';
+                    status.textContent = 'Error de sincronización';
+                    break;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Inicializar
+        cargarConfiguracion();
+    </script>
+</body>
+</html>
