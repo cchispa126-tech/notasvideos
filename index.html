@@ -637,7 +637,13 @@
             guardarNota();
         }
     }
-});  
+});  document.addEventListener('DOMContentLoaded', function() {
+    const campoTexto = document.getElementById('contenido');
+    if (campoTexto) {
+        campoTexto.focus();
+    }
+});
+        
     </script>
 </body>
 </html>
